@@ -9,7 +9,7 @@ use GuzzleHttp\Subscriber\Oauth\Oauth1;
 class PlurkOAuth
 {
     const REQUEST_TOKEN_URL = 'https://www.plurk.com/OAuth/request_token';
-	const AUTHORIZE_URL = 'https://www.plurk.com/OAuth/authorize';
+    const AUTHORIZE_URL = 'https://www.plurk.com/OAuth/authorize';
     const AUTHORIZE_URL_FOR_MOBILE = 'https://www.plurk.com/m/authorize';
     const ACCESS_TOKEN_URL = 'https://www.plurk.com/OAuth/access_token';
 
@@ -23,17 +23,18 @@ class PlurkOAuth
      * @param string $token Client token.
      * @param string $tokenSecret Client secret token.
      */
-    public function __construct($appKey, $appSecret, $token = '', $tokenSecret = '') {
-        if (empty($appKey) || empty($appSecret)){
+    public function __construct($appKey, $appSecret, $token = '', $tokenSecret = '')
+    {
+        if (empty($appKey) || empty($appSecret)) {
             throw new InvalidArgumentException("appKey and appSecret can not be empty");
         }
 
         $this->setting = array(
-            'consumer_key'    => $appKey,
-            'consumer_secret' => $appSecret
+            'consumer_key' => $appKey,
+            'consumer_secret' => $appSecret,
         );
 
-        $this->setting['token']        = $token;
+        $this->setting['token'] = $token;
         $this->setting['token_secret'] = $tokenSecret;
     }
 
@@ -44,10 +45,11 @@ class PlurkOAuth
      * @param array $params params what is need to pass
      * @return GuzzleHttp\Psr7\Response Api response
      */
-    public function post($target, $params = array()){
+    public function post($target, $params = array())
+    {
         $client = $this->getGuzzleClient();
         return $client->request('POST', $target, [
-            'form_params' => $params
+            'form_params' => $params,
         ]);
     }
 
@@ -57,7 +59,8 @@ class PlurkOAuth
      * @param string $target API target
      * @return GuzzleHttp\Psr7\Response Api response
      */
-    public function get($target){
+    public function get($target)
+    {
         $client = $this->getGuzzleClient();
         return $client->get($target);
     }
@@ -65,15 +68,16 @@ class PlurkOAuth
     /**
      * Direct user for authorization
      */
-    public function startAuth(){
+    public function startAuth()
+    {
         $res = $this->getRequestToken();
 
         $_SESSION['oauth_token'] = $res['oauth_token'];
         $_SESSION['oauth_token_secret'] = $res['oauth_token_secret'];
-        if($this->isMobile()){
-            header("Location: ".self::AUTHORIZE_URL_FOR_MOBILE."?oauth_token=".$res['oauth_token']);
-        }else{
-            header("Location: ".self::AUTHORIZE_URL."?oauth_token=".$res['oauth_token']);
+        if ($this->isMobile()) {
+            header("Location: " . self::AUTHORIZE_URL_FOR_MOBILE . "?oauth_token=" . $res['oauth_token']);
+        } else {
+            header("Location: " . self::AUTHORIZE_URL . "?oauth_token=" . $res['oauth_token']);
         }
     }
 
@@ -82,22 +86,24 @@ class PlurkOAuth
      *
      * @return array Values which oauth response.
      */
-    public function parseCallback(){
-		$responseToken = $_GET['oauth_token'];
+    public function parseCallback()
+    {
+        $responseToken = $_GET['oauth_token'];
         $verifier = $_GET['oauth_verifier'];
 
-        if($responseToken !== $_SESSION['oauth_token']){
+        if ($responseToken !== $_SESSION['oauth_token']) {
             throw new \Exception('oauth_token dose not match.');
         }
 
-        $this->setting['token']        = $_SESSION['oauth_token'];
+        $this->setting['token'] = $_SESSION['oauth_token'];
         $this->setting['token_secret'] = $_SESSION['oauth_token_secret'];
         $this->setting['verifier'] = $verifier;
 
         return $this->getAccessToken();
     }
 
-    private function getRequestToken(){
+    private function getRequestToken()
+    {
         $stack = HandlerStack::create();
 
         $middleware = new Oauth1($this->setting);
@@ -105,14 +111,15 @@ class PlurkOAuth
 
         $client = new Client([
             'handler' => $stack,
-            'auth' => 'oauth'
+            'auth' => 'oauth',
         ]);
 
-        $res = (string)$client->request('GET', self::REQUEST_TOKEN_URL)->getBody();
+        $res = (string) $client->request('GET', self::REQUEST_TOKEN_URL)->getBody();
         return $this->parseOAuthRespose($res);
     }
 
-    private function getAccessToken(){
+    private function getAccessToken()
+    {
         $stack = HandlerStack::create();
 
         $middleware = new Oauth1($this->setting);
@@ -120,14 +127,15 @@ class PlurkOAuth
 
         $client = new Client([
             'handler' => $stack,
-            'auth' => 'oauth'
+            'auth' => 'oauth',
         ]);
 
-        $res = (string)$client->request('GET', self::ACCESS_TOKEN_URL)->getBody();
+        $res = (string) $client->request('GET', self::ACCESS_TOKEN_URL)->getBody();
         return $this->parseOAuthRespose($res);
     }
 
-    private function parseOAuthRespose($res){
+    private function parseOAuthRespose($res)
+    {
         $resExploded = \explode('&', $res);
         $resArray = array();
         foreach ($resExploded as $value) {
@@ -137,7 +145,8 @@ class PlurkOAuth
         return $resArray;
     }
 
-    private function getGuzzleClient(){
+    private function getGuzzleClient()
+    {
         $stack = HandlerStack::create();
 
         $middleware = new Oauth1($this->setting);
@@ -146,13 +155,14 @@ class PlurkOAuth
         $client = new Client([
             'base_uri' => 'https://www.plurk.com/APP/',
             'handler' => $stack,
-            'auth' => 'oauth'
+            'auth' => 'oauth',
         ]);
 
         return $client;
     }
 
-    private function isMobile() {
-	    return preg_match("/(android|avantgo|blackberry|bolt|boost|cricket|docomo|fone|hiptop|mini|mobi|palm|phone|pie|tablet|up\.browser|up\.link|webos|wos)/i", $_SERVER["HTTP_USER_AGENT"]);
-	}
+    private function isMobile()
+    {
+        return preg_match("/(android|avantgo|blackberry|bolt|boost|cricket|docomo|fone|hiptop|mini|mobi|palm|phone|pie|tablet|up\.browser|up\.link|webos|wos)/i", $_SERVER["HTTP_USER_AGENT"]);
+    }
 }
