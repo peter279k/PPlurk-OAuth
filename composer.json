@@ -3,11 +3,7 @@
     "description": "The PHP Plurk API with Guzzle6",
     "type": "library",
     "require": {
-        "guzzlehttp/guzzle": "^6.3",
-        "guzzlehttp/oauth-subscriber": "^0.3"
-    },
-    "require-dev": {
-        "guzzlehttp/guzzle": "^6.3",
+        "guzzlehttp/guzzle": "^7.4",
         "guzzlehttp/oauth-subscriber": "^0.3"
     },
     "license": "MIT",
